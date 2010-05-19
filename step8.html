@@ -1,0 +1,62 @@
+<!DOCTYPE html "-//W3C//DTD XHTML 1.0 Strict//EN" 
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <title>A simple example</title>
+    <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key=abcdefg&sensor=true_or_false"
+            type="text/javascript"></script>
+    <script type="text/javascript" src="http://yui.yahooapis.com/3.0.0/build/yui/yui-min.js"></script> 
+    <script type="text/javascript" src="http://github.com/davglass/yui-yql/raw/master/yql-min.js"></script>
+    <script type="text/javascript">
+
+    function initialize(position) {
+      if (GBrowserIsCompatible()) {
+        var map = new GMap2(document.getElementById("map_canvas"));
+        //set center to our lat lon
+        map.setCenter(new GLatLng(position.coords.latitude, position.coords.longitude), 13);
+        map.setUIToDefault();
+        
+        //let's add a marker
+        //map.addOverlay(new GMarker(map.getCenter()));
+        
+        //let's add stuff to the map
+        YUI().use('yql', function(Y) {
+            //Or the callback approach
+            new Y.yql('select * from yelp.review.search where lat = ' + position.coords.latitude + ' and long = ' + position.coords.longitude + ' and term = "coffee" and ywsid="6L0Lc-yn1OKMkCKeXLD4lg"', function(r) {
+               businesses = r.query.results.businesses
+               for (i=0; i<businesses.length; i++) {
+                  map.addOverlay(newMarker(businesses[i]));
+               }
+            });
+        });
+        
+        function newMarker(business) {
+           var latlng = new GLatLng(business.latitude, business.longitude);
+           var marker = new GMarker(latlng);
+           GEvent.addListener(marker,"click", function() {
+             var myHtml = "<h3>" + business.name + "</h3><p><a href='javascript:tweetLoc('" + business.name + "');'>Tweet about here</a>";
+             map.openInfoWindowHtml(latlng, myHtml);
+           });
+           return marker;
+        }
+      }
+    }
+
+    //find us using HTML5
+    function locate() {
+       navigator.geolocation.getCurrentPosition(initialize, function(){});
+    }
+  
+  
+   //add code sample from http://davglass.github.com/yui-yql/
+   
+
+    
+    </script>
+  </head>
+  <!-- update the function call -->
+  <body onload="locate()" onunload="GUnload()">
+    <div id="map_canvas" style="width: 500px; height: 300px"></div>
+  </body>
+</html>
